@@ -3,8 +3,12 @@ using UnityEngine;
 public class mobil : MonoBehaviour
 {
     private float horizontalInput, verticalInput;
+    private float buttonHorizontal, buttonVertical;
+
     private float currentSteerAngle, currentBreakForce;
     private bool isBreaking;
+    private bool brakeButton;
+
     private Rigidbody rb;
 
     [SerializeField] private float motorForce = 1000f;
@@ -41,9 +45,58 @@ public class mobil : MonoBehaviour
 
     private void GetInput()
     {
-        horizontalInput = Input.GetAxis("Horizontal");
-        verticalInput = Input.GetAxis("Vertical");
-        isBreaking = Input.GetKey(KeyCode.Space);
+        float keyboardHorizontal = Input.GetAxis("Horizontal");
+        float keyboardVertical = Input.GetAxis("Vertical");
+
+        horizontalInput = Mathf.Clamp(keyboardHorizontal + buttonHorizontal, -1f, 1f);
+        verticalInput = Mathf.Clamp(keyboardVertical + buttonVertical, -1f, 1f);
+
+        isBreaking = Input.GetKey(KeyCode.Space) || brakeButton;
+    }
+
+    public void LeftDown()
+    {
+        buttonHorizontal = -1f;
+    }
+
+    public void RightDown()
+    {
+        buttonHorizontal = 1f;
+    }
+
+    public void TurnUp()
+    {
+        buttonHorizontal = 0f;
+    }
+
+    public void GasDown()
+    {
+        buttonVertical = 1f;
+    }
+
+    public void GasUp()
+    {
+        buttonVertical = 0f;
+    }
+
+    public void BrakeDown()
+    {
+        if (rb.linearVelocity.magnitude > 1f)
+        {
+            brakeButton = true;
+            buttonVertical = 0f;
+        }
+        else
+        {
+            brakeButton = false;
+            buttonVertical = -1f;
+        }
+    }
+
+    public void BrakeUp()
+    {
+        brakeButton = false;
+        buttonVertical = 0f;
     }
 
     private void HandleMotor()
@@ -52,6 +105,7 @@ public class mobil : MonoBehaviour
         frontRightWheelCollider.motorTorque = verticalInput * motorForce;
 
         currentBreakForce = isBreaking ? breakForce * 0.3f : 0f;
+
         ApplyBreaking();
     }
 
@@ -66,10 +120,7 @@ public class mobil : MonoBehaviour
 
     private void HandleDrift()
     {
-        if (isBreaking)
-            SetRearGrip(driftGrip);
-        else
-            SetRearGrip(normalGrip);
+        SetRearGrip(isBreaking ? driftGrip : normalGrip);
     }
 
     private void SetRearGrip(float grip)
@@ -87,6 +138,7 @@ public class mobil : MonoBehaviour
     private void HandleSteering()
     {
         currentSteerAngle = maxSteerAngle * horizontalInput;
+
         frontLeftWheelCollider.steerAngle = currentSteerAngle;
         frontRightWheelCollider.steerAngle = currentSteerAngle;
     }
@@ -106,7 +158,7 @@ public class mobil : MonoBehaviour
 
         wheelCollider.GetWorldPose(out pos, out rot);
 
-        wheelTransform.rotation = rot;
         wheelTransform.position = pos;
+        wheelTransform.rotation = rot;
     }
 }

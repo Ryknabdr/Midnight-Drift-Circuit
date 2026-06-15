@@ -11,7 +11,7 @@ public class RaceManager : MonoBehaviour
     public GameObject finishPanel;
 
     private int totalLap;
-    private int currentLap = 1;
+    private int currentLap = 0;
     private float timer;
 
     private bool raceStarted = false;
