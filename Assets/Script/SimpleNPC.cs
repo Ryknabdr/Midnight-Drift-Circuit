@@ -1,62 +1,45 @@
-    using UnityEngine;
+using UnityEngine;
 
-    public class SimpleNPC : MonoBehaviour
+public class SimpleNPC : MonoBehaviour
+{
+    [Header("Waypoints")]
+    public Transform[] waypoints;
+
+    [Header("Movement")]
+    public float speed = 8f;
+    public float turnSpeed = 8f;
+    public float reachDistance = 3f;
+
+    private int currentWaypoint = 0;
+
+    void Update()
     {
-        [Header("Waypoints")]
-        public Transform[] waypoints;
+        if (waypoints == null || waypoints.Length == 0)
+            return;
 
-        [Header("NPC Setting")]
-        public float speed = 10f;
-        public float turnSpeed = 12f;
-        public float reachDistance = 2f;
+        Transform target = waypoints[currentWaypoint];
 
-        private int currentWaypoint = 0;
-        private float startY;
+        Vector3 direction = target.position - transform.position;
 
-        void Start()
+        if (direction.magnitude < reachDistance)
         {
-            startY = transform.position.y;
+            currentWaypoint++;
+
+            if (currentWaypoint >= waypoints.Length)
+                currentWaypoint = 0;
+
+            return;
         }
 
-        void Update()
-        {
-            if (waypoints == null || waypoints.Length == 0)
-                return;
+        // Putar ke arah waypoint
+        Quaternion targetRotation = Quaternion.LookRotation(direction.normalized);
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            targetRotation,
+            turnSpeed * Time.deltaTime
+        );
 
-            Transform target = waypoints[currentWaypoint];
-
-            Vector3 targetPos = target.position;
-            targetPos.y = startY;
-
-            Vector3 direction = targetPos - transform.position;
-
-            if (direction.magnitude < reachDistance)
-            {
-                currentWaypoint++;
-
-                if (currentWaypoint >= waypoints.Length)
-                    currentWaypoint = 0;
-
-                return;
-            }
-
-            Quaternion targetRotation = Quaternion.LookRotation(direction);
-
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation,
-                targetRotation,
-                turnSpeed * Time.deltaTime
-            );
-
-            transform.position = Vector3.MoveTowards(
-                transform.position,
-                targetPos,
-                speed * Time.deltaTime
-            );
-
-            // Kunci tinggi NPC supaya tidak tenggelam
-            Vector3 pos = transform.position;
-            pos.y = startY;
-            transform.position = pos;
-        }
+        // Gerak maju
+        transform.position += transform.forward * speed * Time.deltaTime;
     }
+}

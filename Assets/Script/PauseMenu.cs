@@ -3,12 +3,19 @@ using UnityEngine.SceneManagement;
 
 public class PauseMenu : MonoBehaviour
 {
+    [Header("Panels")]
     public GameObject pausePanel;
+    public GameObject settingsPanel;
+
     private bool isPaused = false;
 
     void Start()
     {
         pausePanel.SetActive(false);
+
+        if (settingsPanel != null)
+            settingsPanel.SetActive(false);
+
         Time.timeScale = 1f;
     }
 
@@ -26,6 +33,7 @@ public class PauseMenu : MonoBehaviour
     public void Pause()
     {
         pausePanel.SetActive(true);
+
         Time.timeScale = 0f;
         isPaused = true;
 
@@ -36,8 +44,40 @@ public class PauseMenu : MonoBehaviour
     public void Resume()
     {
         pausePanel.SetActive(false);
+
+        if (settingsPanel != null)
+            settingsPanel.SetActive(false);
+
         Time.timeScale = 1f;
         isPaused = false;
+
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+    }
+
+    public void Restart()
+    {
+        Time.timeScale = 1f;
+
+        SceneManager.LoadScene(
+            SceneManager.GetActiveScene().buildIndex
+        );
+    }
+
+    public void OpenSettings()
+    {
+        pausePanel.SetActive(false);
+
+        if (settingsPanel != null)
+            settingsPanel.SetActive(true);
+    }
+
+    public void CloseSettings()
+    {
+        if (settingsPanel != null)
+            settingsPanel.SetActive(false);
+
+        pausePanel.SetActive(true);
     }
 
     public void MainMenu()

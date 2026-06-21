@@ -5,13 +5,9 @@ public class MainMenu : MonoBehaviour
 {
     [Header("Panel Popup")]
     public GameObject levelSelectPanel;
+    public GameObject settingsPanel;
 
     public void Play()
-    {
-        SceneManager.LoadScene("mobil");
-    }
-
-    public void OpenLevelSelect()
     {
         levelSelectPanel.SetActive(true);
     }
@@ -19,6 +15,16 @@ public class MainMenu : MonoBehaviour
     public void CloseLevelSelect()
     {
         levelSelectPanel.SetActive(false);
+    }
+
+    public void OpenSettings()
+    {
+        settingsPanel.SetActive(true);
+    }
+
+    public void CloseSettings()
+    {
+        settingsPanel.SetActive(false);
     }
 
     public void Level1()
