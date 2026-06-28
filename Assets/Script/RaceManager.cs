@@ -1,14 +1,23 @@
 using UnityEngine;
 using TMPro;
+using System.Collections;
 using UnityEngine.SceneManagement;
 
 public class RaceManager : MonoBehaviour
 {
+    [Header("UI")]
     public TMP_Text timeText;
     public TMP_Text lapText;
     public TMP_Text finishTimeText;
+    public TMP_Text countdownText;
 
     public GameObject finishPanel;
+
+    [Header("Player")]
+    public mobil playerCar;
+
+    [Header("NPC")]
+    public AICarController[] npcCars;
 
     private int totalLap;
     private int currentLap = 0;
@@ -16,33 +25,90 @@ public class RaceManager : MonoBehaviour
 
     private bool raceStarted = false;
     private bool raceFinished = false;
+    private bool countdownFinished = false;
 
     void Start()
-    {
-        string sceneName = SceneManager.GetActiveScene().name;
+{
+    Cursor.visible = true;
+    Cursor.lockState = CursorLockMode.None;
 
-        if (sceneName == "mobil")
-            totalLap = 2;
-        else if (sceneName == "mobillvl2")
-            totalLap = 3;
+    string sceneName = SceneManager.GetActiveScene().name;
 
-        finishPanel.SetActive(false);
+    if (sceneName == "mobil")
+        totalLap = 2;
+    else if (sceneName == "mobillvl2")
+        totalLap = 3;
 
-        UpdateTimeText();
-        UpdateLapText();
-    }
+    finishPanel.SetActive(false);
+
+    UpdateTimeText();
+    UpdateLapText();
+
+    StartCoroutine(StartCountdown());
+}
 
     void Update()
     {
-        if (!raceStarted || raceFinished) return;
+        if (!countdownFinished)
+            return;
+
+        if (!raceStarted || raceFinished)
+            return;
 
         timer += Time.deltaTime;
         UpdateTimeText();
     }
 
+    IEnumerator StartCountdown()
+    {
+        // Matikan kontrol Player
+        if (playerCar != null)
+            playerCar.enabled = false;
+
+        // Matikan semua NPC
+        foreach (AICarController npc in npcCars)
+        {
+            if (npc != null)
+                npc.enabled = false;
+        }
+
+        countdownText.gameObject.SetActive(true);
+
+        countdownText.text = "3";
+        yield return new WaitForSeconds(1f);
+
+        countdownText.text = "2";
+        yield return new WaitForSeconds(1f);
+
+        countdownText.text = "1";
+        yield return new WaitForSeconds(1f);
+
+        countdownText.text = "GO!";
+        yield return new WaitForSeconds(1f);
+
+        countdownText.gameObject.SetActive(false);
+
+        // Aktifkan Player
+        if (playerCar != null)
+            playerCar.enabled = true;
+
+        // Aktifkan semua NPC
+        foreach (AICarController npc in npcCars)
+        {
+            if (npc != null)
+                npc.enabled = true;
+        }
+
+        countdownFinished = true;
+    }
+
     private void OnTriggerEnter(Collider other)
     {
-        if (!other.CompareTag("Player")) return;
+        if (!countdownFinished)
+            return;
+
+        if (!other.CompareTag("Player"))
+            return;
 
         if (!raceStarted)
         {
@@ -65,6 +131,12 @@ public class RaceManager : MonoBehaviour
     {
         raceFinished = true;
 
+        // Unlock Level 2 setelah menyelesaikan Level 1
+        if (SceneManager.GetActiveScene().name == "mobil")
+        {
+            SaveGame.UnlockLevel(2);
+        }
+
         lapText.text = "FINISH!";
         finishPanel.SetActive(true);
 
@@ -74,6 +146,7 @@ public class RaceManager : MonoBehaviour
         finishTimeText.text = "Time : " + minutes.ToString("00") + ":" + seconds.ToString("00");
 
         Time.timeScale = 0f;
+
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
     }
